@@ -1,6 +1,6 @@
 use aoc2022::d06;
 
 fn main() {
-    println!("{}", d06::solve(4));
-    println!("{}", d06::solve(14));
+    aoc2022::run(|| d06::solve(4));
+    aoc2022::run(|| d06::solve(14));
 }
