@@ -1,12 +1,12 @@
-use std::collections::HashMap;
+use std::collections::{HashMap, VecDeque};
 
 const INPUT: &str = include_str!("input.txt");
 
 type Coords = (usize, usize);
 
-struct Visited {
+struct Node {
+    coords: Coords,
     route_len: usize,
-    exits: i32,
 }
 
 pub fn solve01() -> usize {
@@ -29,64 +29,56 @@ pub fn solve02() -> usize {
     )
 }
 
-fn solve<F1, F2>(area: &Vec<Vec<u8>>, start: Coords, is_allowed: F1, is_end: F2) -> usize
+fn solve<F1, F2>(area: &[Vec<u8>], start: Coords, is_allowed: F1, is_end: F2) -> usize
 where
     F1: Fn(&Coords, &Coords) -> bool,
     F2: Fn(&Coords) -> bool,
 {
-    let mut route_len = usize::MAX;
-    let mut route = vec![start];
-    let mut visited: HashMap<Coords, Visited> = HashMap::new();
-    visited.insert(
-        start,
-        Visited {
-            route_len: 0,
-            exits: 0,
-        },
-    );
+    let mut queue: VecDeque<Node> = VecDeque::new();
+    let mut visited: HashMap<Coords, usize> = HashMap::new();
+    queue.push_back(Node {
+        coords: start,
+        route_len: 0,
+    });
+    while let Some(here) = queue.pop_front() {
+        // Because all edges have the same cost,
+        // nodes at the beginning of the queue are guaranteed to be the shortest route.
+        if is_end(&here.coords) {
+            return here.route_len;
+        }
 
-    while !route.is_empty() {
-        let here = *route.last().unwrap();
-        let (x, y) = here;
-
-        let v = visited.get_mut(&here).unwrap();
-        v.exits += 1;
-
-        let next = match v.exits {
-            1 if x + 1 < area[y].len() => (x + 1, y),
-            2 if x > 0 => (x - 1, y),
-            3 if y + 1 < area.len() => (x, y + 1),
-            4 if y > 0 => (x, y - 1),
-            5.. => {
-                route.pop().unwrap();
-                continue;
-            }
-            _ => continue,
-        };
-
-        if is_allowed(&here, &next)
-            && route.len()
-                < visited
-                    .get(&next)
-                    .map(|v| v.route_len)
-                    .unwrap_or(usize::MAX)
-        {
-            visited.insert(
-                next,
-                Visited {
-                    route_len: route.len(),
-                    exits: 0,
-                },
-            );
-            if is_end(&next) {
-                route_len = std::cmp::min(route_len, route.len());
-            } else {
-                route.push(next);
+        for n in neighbours(here.coords, area) {
+            if is_allowed(&here.coords, &n)
+                && here.route_len + 1 < *visited.get(&n).unwrap_or(&usize::MAX)
+            {
+                visited.insert(n, here.route_len + 1);
+                queue.push_back(Node {
+                    coords: n,
+                    route_len: here.route_len + 1,
+                });
             }
         }
     }
 
-    route_len
+    usize::MAX
+}
+
+fn neighbours(here: Coords, area: &[Vec<u8>]) -> impl Iterator<Item = Coords> {
+    let (x, y) = here;
+    let mut neighbours: Vec<Coords> = Vec::with_capacity(4);
+    if x + 1 < area[y].len() {
+        neighbours.push((x + 1, y));
+    }
+    if x > 0 {
+        neighbours.push((x - 1, y));
+    }
+    if y + 1 < area.len() {
+        neighbours.push((x, y + 1));
+    }
+    if y > 0 {
+        neighbours.push((x, y - 1));
+    }
+    neighbours.into_iter()
 }
 
 fn parse() -> (Vec<Vec<u8>>, Coords, Coords) {
