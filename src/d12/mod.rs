@@ -9,8 +9,31 @@ struct Visited {
     exits: i32,
 }
 
-pub fn solve() -> usize {
+pub fn solve01() -> usize {
     let (area, start, end) = parse();
+    solve(
+        &area,
+        start,
+        |&(x1, y1), &(x2, y2)| area[y2][x2] <= area[y1][x1] + 1,
+        |&coords| coords == end,
+    )
+}
+
+pub fn solve02() -> usize {
+    let (area, _, end) = parse();
+    solve(
+        &area,
+        end,
+        |&(x1, y1), &(x2, y2)| area[y2][x2] >= area[y1][x1] - 1,
+        |&coords| area[coords.1][coords.0] == 0,
+    )
+}
+
+fn solve<F1, F2>(area: &Vec<Vec<u8>>, start: Coords, is_allowed: F1, is_end: F2) -> usize
+where
+    F1: Fn(&Coords, &Coords) -> bool,
+    F2: Fn(&Coords) -> bool,
+{
     let mut route_len = usize::MAX;
     let mut route = vec![start];
     let mut visited: HashMap<Coords, Visited> = HashMap::new();
@@ -41,7 +64,7 @@ pub fn solve() -> usize {
             _ => continue,
         };
 
-        if area[next.1][next.0] <= area[y][x] + 1
+        if is_allowed(&here, &next)
             && route.len()
                 < visited
                     .get(&next)
@@ -55,8 +78,8 @@ pub fn solve() -> usize {
                     exits: 0,
                 },
             );
-            if next == end {
-                route_len = route.len();
+            if is_end(&next) {
+                route_len = std::cmp::min(route_len, route.len());
             } else {
                 route.push(next);
             }
