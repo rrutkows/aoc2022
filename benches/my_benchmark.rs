@@ -10,7 +10,8 @@ fn criterion_benchmark(c: &mut Criterion) {
     c.bench_function("d16p2", |b| b.iter(|| d16::solve(2)));
     c.bench_function("d17p1", |b| b.iter(|| d17::solve(2022)));
     c.bench_function("d17p2", |b| b.iter(|| d17::solve(1000000000000)));
-    c.bench_function("d18p1", |b| b.iter(d18::solve));
+    c.bench_function("d18p1", |b| b.iter(d18::solve01));
+    c.bench_function("d18p2", |b| b.iter(d18::solve02));
 }
 
 criterion_group!(benches, criterion_benchmark);
