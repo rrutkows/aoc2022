@@ -25,22 +25,24 @@ impl Snapshot {
         }
     }
 
-    fn next(&self, bprint: &Blueprint, new_robots: &[usize]) -> Self {
+    fn next(&self, bprint: &Blueprint, new_robot: usize) -> Self {
+        let time_needed = 1 + bprint.robots[new_robot]
+            .iter()
+            .enumerate()
+            .map(|(i, cost)| {
+                if *cost as u32 > self.minerals[i] {
+                    (*cost as u32 - self.minerals[i] + self.robots[i] - 1) / self.robots[i]
+                } else {
+                    0
+                }
+            })
+            .max()
+            .unwrap();
         Self {
-            time_passed: self.time_passed + 1,
-            robots: std::array::from_fn(|i| {
-                self.robots[i]
-                    + new_robots
-                        .iter()
-                        .filter(|i_new_robot| i == **i_new_robot)
-                        .count() as u32
-            }),
+            time_passed: self.time_passed + time_needed as u8,
+            robots: std::array::from_fn(|i| self.robots[i] + if i == new_robot { 1 } else { 0 }),
             minerals: std::array::from_fn(|i| {
-                self.minerals[i] + self.robots[i]
-                    - new_robots
-                        .iter()
-                        .map(|i_new_robot| bprint.robots[*i_new_robot][i])
-                        .sum::<u8>() as u32
+                self.minerals[i] + self.robots[i] * time_needed - bprint.robots[new_robot][i] as u32
             }),
         }
     }
@@ -64,26 +66,25 @@ fn use_bprint(bprint: &Blueprint, time: u8) -> u32 {
     let mut q: Vec<Snapshot> = Vec::new();
     q.push(Snapshot::new());
     while let Some(current) = q.pop() {
-        geodes = geodes.max(current.minerals[3]);
         let time_left = (time - current.time_passed) as u32;
+        geodes = geodes.max(current.minerals[3] + time_left * current.robots[3]);
         let geodes_possible =
             current.minerals[3] + time_left * current.robots[3] + (1..time_left).sum::<u32>();
-        if current.time_passed < time && geodes_possible > geodes {
-            q.push(current.next(bprint, &[]));
+        if geodes_possible > geodes {
             for affordable_robot in bprint
                 .robots
                 .iter()
                 .enumerate()
+                .rev() //try building geode robots first
                 .filter(|(_, cost)| {
-                    current
-                        .minerals
-                        .iter()
-                        .enumerate()
-                        .all(|(j, m)| *m >= cost[j] as u32)
+                    time_left > 1
+                        && cost.iter().enumerate().all(|(j, c)| {
+                            *c as u32 <= current.minerals[j] + (time_left - 1) * current.robots[j]
+                        })
                 })
                 .map(|(i, _)| i)
             {
-                q.push(current.next(bprint, &[affordable_robot]));
+                q.push(current.next(bprint, affordable_robot));
             }
         }
     }
