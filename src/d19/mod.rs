@@ -70,22 +70,25 @@ fn use_bprint(bprint: &Blueprint, time: u8) -> u32 {
         geodes = geodes.max(current.minerals[3] + time_left * current.robots[3]);
         let geodes_possible =
             current.minerals[3] + time_left * current.robots[3] + (1..time_left).sum::<u32>();
-        if geodes_possible > geodes {
-            for affordable_robot in bprint
-                .robots
-                .iter()
-                .enumerate()
-                .rev() //try building geode robots first
-                .filter(|(_, cost)| {
-                    time_left > 1
-                        && cost.iter().enumerate().all(|(j, c)| {
+
+        // It only makes sense to try planning building a robot if there's more than 1 minute left
+        // and theoretically possible geode count is higher than what we've seen so far.
+        if time_left > 1 && geodes_possible > geodes {
+            q.extend(
+                bprint
+                    .robots
+                    .iter()
+                    .enumerate()
+                    .rev() //try building geode robots first
+                    .filter(|(_, cost)| {
+                        // Select robots affordable for what we have now
+                        // plus what we can collect before the time ends.
+                        cost.iter().enumerate().all(|(j, c)| {
                             *c as u32 <= current.minerals[j] + (time_left - 1) * current.robots[j]
                         })
-                })
-                .map(|(i, _)| i)
-            {
-                q.push(current.next(bprint, affordable_robot));
-            }
+                    })
+                    .map(|(i, _)| current.next(bprint, i)),
+            );
         }
     }
 
