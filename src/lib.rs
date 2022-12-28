@@ -19,6 +19,7 @@ pub mod d16;
 pub mod d17;
 pub mod d18;
 pub mod d19;
+pub mod d20;
 
 pub fn run<T, F>(f: F)
 where
