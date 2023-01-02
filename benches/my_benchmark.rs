@@ -1,4 +1,4 @@
-use aoc2022::{d14, d15, d16, d17, d18, d19, d20, d21, d22, d23};
+use aoc2022::{d14, d15, d16, d17, d18, d19, d20, d21, d22, d23, d24};
 use criterion::{criterion_group, criterion_main, Criterion};
 
 fn criterion_benchmark(c: &mut Criterion) {
@@ -22,6 +22,8 @@ fn criterion_benchmark(c: &mut Criterion) {
     c.bench_function("d22p2", |b| b.iter(d22::solve02));
     c.bench_function("d23p1", |b| b.iter(d23::solve01));
     c.bench_function("d23p2", |b| b.iter(d23::solve02));
+    c.bench_function("d24p1", |b| b.iter(d24::solve01));
+    c.bench_function("d24p2", |b| b.iter(d24::solve02));
 }
 
 criterion_group!(benches, criterion_benchmark);
