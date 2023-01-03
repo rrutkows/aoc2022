@@ -40,7 +40,7 @@ impl Snapshot {
             .unwrap();
         Self {
             time_passed: self.time_passed + time_needed as u8,
-            robots: std::array::from_fn(|i| self.robots[i] + if i == new_robot { 1 } else { 0 }),
+            robots: std::array::from_fn(|i| self.robots[i] + u32::from(i == new_robot)),
             minerals: std::array::from_fn(|i| {
                 self.minerals[i] + self.robots[i] * time_needed - bprint.robots[new_robot][i] as u32
             }),
