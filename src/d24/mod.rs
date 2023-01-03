@@ -75,50 +75,55 @@ fn solve(from: Coords, to: Coords, start_at: usize, map: &Map) -> usize {
     let mut result = usize::MAX;
     let mut q: BinaryHeap<Node> = BinaryHeap::new();
     let mut visited: HashSet<(usize, usize, usize)> = HashSet::new();
-    let mut starting_t = start_at;
-    while result == usize::MAX {
-        starting_t = (starting_t + 1..)
-            .find(|t| !map.is_there_blizzard(&from, *t))
-            .unwrap();
-        q.push(Node::new(from, starting_t, &to));
-        visited.insert((0, 0, starting_t));
-        while let Some(n) = q.pop() {
-            if n.c == to {
-                result = result.min(n.t);
-                continue;
-            }
+    let mut enter_t = (start_at + 1..)
+        .find(|t| !map.is_there_blizzard(&from, *t))
+        .unwrap();
+    q.push(Node::new(from, enter_t, &to));
+    visited.insert((from.0, from.1, enter_t));
+    while let Some(n) = q.pop() {
+        if n.c == to {
+            result = result.min(n.t);
+            continue;
+        }
 
-            if n.min_t_possible >= result {
-                // This route cannot possibly be faster than one already found. Cut off branch.
-                continue;
-            }
+        if n.min_t_possible >= result {
+            // This route cannot possibly be faster than one already found. Cut off branch.
+            continue;
+        }
 
-            let mut nexts: Vec<Coords> = Vec::new();
-            // Try waiting
-            nexts.push(n.c);
+        if n.c == from {
+            enter_t = (enter_t + 1..)
+                .find(|t| !map.is_there_blizzard(&from, *t))
+                .unwrap();
+            q.push(Node::new(from, enter_t, &to));
+            visited.insert((from.0, from.1, enter_t));
+        }
 
-            // Try moving
-            let (x, y) = n.c;
-            if x < map.width - 1 {
-                nexts.push((x + 1, y));
-            }
-            if y < map.height - 1 {
-                nexts.push((x, y + 1));
-            }
-            if x > 0 {
-                nexts.push((x - 1, y));
-            }
-            if y > 0 {
-                nexts.push((x, y - 1));
-            }
+        let mut nexts: Vec<Coords> = Vec::new();
+        // Try waiting
+        nexts.push(n.c);
 
-            for next in nexts.into_iter() {
-                if !visited.contains(&(next.0, next.1, n.t + 1))
-                    && !map.is_there_blizzard(&next, n.t + 1)
-                {
-                    q.push(Node::new(next, n.t + 1, &to));
-                    visited.insert((next.0, next.1, n.t + 1));
-                }
+        // Try moving
+        let (x, y) = n.c;
+        if x < map.width - 1 {
+            nexts.push((x + 1, y));
+        }
+        if y < map.height - 1 {
+            nexts.push((x, y + 1));
+        }
+        if x > 0 {
+            nexts.push((x - 1, y));
+        }
+        if y > 0 {
+            nexts.push((x, y - 1));
+        }
+
+        for next in nexts.into_iter() {
+            if !visited.contains(&(next.0, next.1, n.t + 1))
+                && !map.is_there_blizzard(&next, n.t + 1)
+            {
+                q.push(Node::new(next, n.t + 1, &to));
+                visited.insert((next.0, next.1, n.t + 1));
             }
         }
     }
