@@ -39,7 +39,7 @@ pub fn solve01() -> usize {
         - 2 * coords_list
             .iter()
             .enumerate()
-            .map(|(i, c1)| {
+            .flat_map(|(i, c1)| {
                 coords_list
                     .iter()
                     .skip(i + 1)
@@ -49,9 +49,8 @@ pub fn solve01() -> usize {
                             .sum::<u8>()
                             == 1
                     })
-                    .count()
             })
-            .sum::<usize>()
+            .count()
 }
 
 pub fn solve02() -> usize {
