@@ -1,4 +1,3 @@
-use std::iter;
 use std::str::FromStr;
 
 mod input;
@@ -15,14 +14,21 @@ pub fn run(is_reordering_crane: bool) -> String {
     let mut stacks = parse_stacks();
 
     for m in input::MOVES.lines().map(parse_move) {
-        let from_len = stacks[m.from].len();
-        let removed = stacks[m.from].splice(from_len - m.count..from_len, iter::empty());
-        let mut moved: Vec<char> = if is_reordering_crane {
-            removed.rev().collect()
+        // split_at_mut to have mutable references
+        // to different items of the same Vec at the same time.
+        let (s1, s2) = stacks.split_at_mut(usize::max(m.from, m.to));
+        let (from, to) = if m.from > m.to {
+            (&mut s2[0], &mut s1[m.to])
         } else {
-            removed.collect()
+            (&mut s1[m.from], &mut s2[0])
         };
-        stacks[m.to].append(&mut moved);
+        let from_len = from.len();
+        let removed = from.drain(from_len - m.count..from_len);
+        if is_reordering_crane {
+            to.extend(removed.rev());
+        } else {
+            to.extend(removed);
+        }
     }
 
     String::from_iter(
