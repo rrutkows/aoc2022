@@ -1,4 +1,4 @@
-use std::collections::{HashMap, VecDeque};
+use std::collections::{HashSet, VecDeque};
 
 const INPUT: &str = include_str!("input.txt");
 
@@ -35,7 +35,7 @@ where
     F2: Fn(&Coords) -> bool,
 {
     let mut queue: VecDeque<Node> = VecDeque::new();
-    let mut visited: HashMap<Coords, usize> = HashMap::new();
+    let mut visited: HashSet<Coords> = HashSet::new();
     queue.push_back(Node {
         coords: start,
         route_len: 0,
@@ -48,10 +48,8 @@ where
         }
 
         for n in neighbours(here.coords, area) {
-            if is_allowed(&here.coords, &n)
-                && here.route_len + 1 < *visited.get(&n).unwrap_or(&usize::MAX)
-            {
-                visited.insert(n, here.route_len + 1);
+            if is_allowed(&here.coords, &n) && !visited.contains(&n) {
+                visited.insert(n);
                 queue.push_back(Node {
                     coords: n,
                     route_len: here.route_len + 1,
