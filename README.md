@@ -1,3 +1,5 @@
+*This project has been transferred to [aoc_rs](https://github.com/rrutkows/aoc_rs) and archived.*
+
 https://adventofcode.com/2022
 
 Assumming `DD` is the day number, paste your input into `dDD/input.rs` or `dDD/input.txt` and run:
